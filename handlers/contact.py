@@ -1,14 +1,21 @@
 from keyboards.botreplykeyboards import take_contact, general_menu
 import time
 import re
+from utils import *
+from dotenv import load_dotenv
+from keyboards.botreplykeyboards import general_menu
+from botconfig import BotConfig
+
+load_dotenv()
+
+group_id = BotConfig().group_id
 
 user_info = {}
 user_state = {}
 
-group_id = -1003252693979
-
 def contact_handler(bot):
     @bot.message_handler(func=lambda message: True, content_types=['text', 'contact'])
+    @private_only
     def state_manager(msg):
         chat_id = msg.chat.id
         # Agar yangi user bo‘lsa, default qilib main_menu qilamiz
@@ -26,11 +33,13 @@ def contact_handler(bot):
         elif state == "commit_message":
             commit_message(msg)
 
+    @private_only
     def admin_contact(msg):
         chat_id = msg.chat.id
         bot.send_message(chat_id, "Ismingizni kiriting: ")
         user_state[chat_id] = "take_phone"
 
+    @private_only
     def take_phone(msg):
         chat_id = msg.chat.id
         user_info.setdefault(chat_id, {})
@@ -38,11 +47,13 @@ def contact_handler(bot):
         bot.send_message(chat_id, "Telefon raqamingizni kiriting: ", reply_markup=take_contact())
         user_state[chat_id] = "user_message"
 
+    @private_only
     def is_valid_phone(phone: str) -> bool:
         # ✅ faqat 998 bilan boshlanishi yoki +998 bilan boshlanishiga ruxsat
         pattern = r'^(?:\+998\d{9}|998\d{9}|\d{9})$'
         return bool(re.match(pattern, phone))
 
+    @private_only
     def user_message(msg):
         chat_id = msg.chat.id
 
@@ -64,6 +75,7 @@ def contact_handler(bot):
         bot.send_message(chat_id, "Xabaringizni kiriting: ")
         user_state[chat_id] = "commit_message"
 
+    @private_only
     def commit_message(msg):
         chat_id = msg.chat.id
         user_info.setdefault(chat_id, {})

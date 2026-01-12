@@ -29,7 +29,7 @@ INSTALLED_APPS += [
 ]
 
 INSTALLED_APPS += [
-    "taqdimot_app",
+    'taqdimot_app.apps.TaqdimotAppConfig',
 ]
 
 MIDDLEWARE = [
