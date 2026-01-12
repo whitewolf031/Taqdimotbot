@@ -17,3 +17,9 @@ def take_contact():
     contact_button = types.KeyboardButton("Phone number", request_contact=True)
     keyboards.row(contact_button)
     return keyboards
+
+def general_back():
+    keyboards = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    back = types.KeyboardButton("Orqaga")
+    keyboards.row(back)
+    return keyboards
