@@ -14,7 +14,7 @@ user_info = {}
 user_state = {}
 
 def contact_handler(bot):
-    @bot.message_handler(func=lambda message: True, content_types=['text', 'contact'])
+    # @bot.message_handler(func=lambda message: True, content_types=['text', 'contact'])
     @private_only
     def state_manager(msg):
         chat_id = msg.chat.id
