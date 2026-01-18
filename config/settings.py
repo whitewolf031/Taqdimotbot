@@ -3,6 +3,8 @@ import environ
 import os
 from datetime import *
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 root = environ.Path(__file__) - 2
 env = environ.Env()
 environ.Env.read_env(env.str(root(), '.env'))
