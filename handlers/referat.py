@@ -7,7 +7,6 @@ from django.conf import settings
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
-
 @private_only
 def start_referat(bot, msg):
     chat_id = msg.chat.id

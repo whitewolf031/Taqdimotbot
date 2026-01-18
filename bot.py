@@ -17,6 +17,7 @@ def start_bot():
     register_state_manager(bot)
 
     start_handler(bot)
+
     slide_handler(bot)
 
     @bot.message_handler(func=lambda m: m.text == "Qo'llanma")
@@ -26,6 +27,7 @@ def start_bot():
     @bot.message_handler(commands=['referat'])
     def referat(msg):
         start_referat(bot, msg)
+
 
     # Oddiy menu handlerlar
     @bot.message_handler(func=lambda m: m.text == "Bog'lanish")
