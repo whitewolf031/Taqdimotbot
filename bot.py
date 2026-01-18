@@ -7,6 +7,7 @@ from botconfig import BotConfig
 from state.state_meneger import register_state_manager
 from state.storage import user_state
 from keyboards.botreplykeyboards import general_menu
+from handlers.profile import my_handler
 
 def start_bot():
     bot = TeleBot(BotConfig().token)
@@ -14,6 +15,7 @@ def start_bot():
     register_state_manager(bot)
 
     start_handler(bot)
+    my_handler(bot)
     # Oddiy menu handlerlar
     @bot.message_handler(func=lambda m: m.text == "Bog'lanish")
     def contact_handler(msg):
