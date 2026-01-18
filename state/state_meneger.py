@@ -1,5 +1,6 @@
 from state.storage import user_state
 from handlers.contact import take_phone, user_message, commit_message
+from handlers.referat import referat_topic, referat_institute, referat_author, referat_bet
 from keyboards.botreplykeyboards import general_menu
 from utils import private_only
 
@@ -26,3 +27,15 @@ def register_state_manager(bot):
 
         elif state == "commit_message":
             commit_message(bot, msg)
+
+        elif state == "referat_topic":
+            referat_topic(bot, msg)
+
+        elif state == "referat_institute":
+            referat_institute(bot, msg)
+
+        elif state == "referat_author":
+            referat_author(bot, msg)
+
+        elif state == "referat_bet":
+            referat_bet(bot, msg)

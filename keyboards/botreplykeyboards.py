@@ -23,3 +23,18 @@ def general_back():
     back = types.KeyboardButton("Orqaga")
     keyboards.row(back)
     return keyboards
+
+def betlar_soni():
+    keyboards = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    bet1 = types.KeyboardButton("5-10")
+    bet2 = types.KeyboardButton("10-15")
+    bet3 = types.KeyboardButton("15-20")
+    bet4 = types.KeyboardButton("20-25")
+    bet5 = types.KeyboardButton("25-30")
+    bet6 = types.KeyboardButton("30-35")
+
+    keyboards.row(bet1, bet2)
+    keyboards.row(bet3, bet4)
+    keyboards.row(bet5, bet6)
+    
+    return keyboards
