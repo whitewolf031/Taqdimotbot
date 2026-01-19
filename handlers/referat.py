@@ -3,6 +3,8 @@ from utils import private_only
 from keyboards.botinlinekeyboards import referat_button, check_button, choose_languange
 from keyboards.botreplykeyboards import betlar_soni, general_menu
 from openai import OpenAI
+import os
+import requests
 from django.conf import settings
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -100,26 +102,26 @@ def choose_button(bot, call):
     chat_id = call.message.chat.id
     data = user_data[chat_id]
 
-    prompt = f"""
-        REFERAT yozib ber:
-
-        Mavzu: {data['topic']}
-        Institut: {data['institute']}
-        Muallif: {data['author']}
-        Til: Uzbek
-        Hajmi: 5–10 bet
-    """
-
     if call.data == "do":
-        response = client.chat.completions.create(
-            model="gpt-4.1-mini",
-            messages=[
-                {"role": "system", "content": "Sen akademik referat yozuvchi yordamchisan."},
-                {"role": "user", "content": prompt}
-            ]
+        response = requests.post(
+            "http://127.0.0.1:8000/api/generate-work/",
+            json=user_data[chat_id]
         )
 
-        return response.choices[0].message.content
+        # API JSON javobidan fayl URL ni oling
+        file_url = response.json().get("file")
+        if not file_url:
+            bot.send_message(chat_id, "Fayl yaratilmay qoldi ❌")
+            return
+
+        # URL dan faqat fayl nomini ajratib olish
+        filename = os.path.basename(file_url)  # misol: referat_xxxxx.docx
+        file_path = os.path.join(settings.MEDIA_ROOT, filename)
+
+        # Telegramga faylni yuborish
+        with open(file_path, "rb") as f:
+            bot.send_document(chat_id, f, caption="Sizning referatingiz tayyor ✅")
+
 
     if call.data == "back":
         bot.send_message(chat_id, "Siz bosh menu dasiz", reply_markup=general_menu())

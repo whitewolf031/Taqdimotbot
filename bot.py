@@ -2,7 +2,7 @@ from telebot import TeleBot
 from handlers.start import start_handler
 from handlers.contact import admin_contact, take_phone, user_message, commit_message
 from handlers.balans import show_balance
-from handlers.referat import start_referat, referat_type, referat_languange, referat_button
+from handlers.referat import start_referat, referat_type, referat_languange, choose_button
 from botconfig import BotConfig
 from state.state_meneger import register_state_manager
 from state.storage import user_state
@@ -52,7 +52,7 @@ def start_bot():
 
     @bot.callback_query_handler(func=lambda call: call.data in ["do","back", "check"])
     def referat_do(call):
-        referat_button(bot, call)
+        choose_button(bot, call)
 
     @bot.message_handler(func=lambda m: m.text in ("Orqaga", "Orqaga ⬅️"))
     def go_back(msg):
