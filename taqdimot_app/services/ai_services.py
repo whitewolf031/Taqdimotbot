@@ -2,58 +2,139 @@
 from openai import OpenAI
 from django.conf import settings
 import json
-import textwrap
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
-def generate_referat_json(system_role: str, prompt: str, bet: int = 1) -> dict:
+def generate_academic_json(system_role: str, prompt: str, meta: dict) -> dict:
     """
-    AI dan JSON formatida referat yaratish.
-    'bet' parametri: foydalanuvchi nechta bet bergan bo'lsa ham, AI 1 bet qilib qisqartiradi.
+    AI dan OTM formatidagi REFERAT yoki MUSTAQIL ISH uchun JSON olish
     """
+
     try:
-        # AI so‘rovi
         response = client.chat.completions.create(
             model="gpt-4.1-mini",
             messages=[
                 {"role": "system", "content": system_role},
-                {"role": "user", "content": prompt + f"""
-            Natijani faqat to‘g‘ri JSON formatida qaytar. Hajmni 1 betga mosla:
+                {
+                    "role": "user",
+                    "content": prompt + f"""
 
+        Natijani FAQAT to‘g‘ri JSON formatida qaytar.
+        Quyidagi struktura qat’iy saqlansin:
+
+        {{
+        "work_type": "{meta['work_type']}",
+        "ministry": "{meta['ministry']}",
+        "university": "{meta['university']}",
+        "department": "{meta['department']}",
+
+        "title": "{meta['title']}",
+
+        "author": "{meta['author']}",
+        "course": "{meta['course']}",
+        "checker": "{meta['checker']}",
+        "city_year": "{meta['city_year']}",
+
+        "plan": [
+            "Kirish",
+            "Nazariy qism",
+            "Amaliy qism",
+            "Xulosa"
+        ],
+
+        "sections": [
             {{
-            "title": "",
-            "sections": [
-            {{"heading": "Kirish", "content": ""}},
-            {{"heading": "Asosiy qism", "content": ""}},
-            {{"heading": "Xulosa", "content": ""}}
-            ]
+            "heading": "Kirish",
+            "content": "..."
+            }},
+            {{
+            "heading": "Nazariy qism",
+            "content": "..."
+            }},
+            {{
+            "heading": "Amaliy qism",
+            "content": "..."
             }}
-            """}
+        ],
+
+        "code_examples": [
+            {{
+            "language": "C++",
+            "description": "Ta’lim paketini tanlash — if-else",
+            "code": "..."
+            }}
+        ],
+
+        "conclusion": "..."
+        }}
+
+        ⚠️ Hech qanday izoh, markdown yoki matn yozma.
+        ⚠️ Faqat JSON qaytar.
+        """
+                }
             ]
         )
-        raw_content = response.choices[0].message.content
 
-        try:
-            data = json.loads(raw_content)
-        except json.JSONDecodeError:
-            # AI noto‘g‘ri JSON yuborsa default struktura
-            data = {
-                "title": "Sarlavha mavjud emas",
-                "sections": [
-                    {"heading": "Kirish", "content": "Kirish matni mavjud emas."},
-                    {"heading": "Asosiy qism", "content": "Asosiy qism matni mavjud emas."},
-                    {"heading": "Xulosa", "content": "Xulosa matni mavjud emas."}
-                ]
-            }
+        raw_content = response.choices[0].message.content.strip()
 
-        return data
+        return json.loads(raw_content)
+
+    except json.JSONDecodeError:
+        return _default_academic_json(meta, "AI noto‘g‘ri JSON qaytardi")
 
     except Exception as e:
-        return {
-            "title": "Xatolik yuz berdi",
-            "sections": [
-                {"heading": "Kirish", "content": f"AI so‘rovi bajarilmadi: {str(e)}"},
-                {"heading": "Asosiy qism", "content": ""},
-                {"heading": "Xulosa", "content": ""}
-            ]
-        }
+        return _default_academic_json(meta, str(e))
+
+def _default_academic_json(meta: dict, error_message: str) -> dict:
+    """
+    AI xato qilganda yoki JSON buzilganda
+    minimal, lekin DOCX uchun yaroqli struktura
+    """
+
+    return {
+        "work_type": meta.get("work_type", "REFERAT"),
+        "ministry": meta.get(
+            "ministry",
+            "O‘zbekiston Respublikasi Oliy ta’lim, fan va innovatsiyalar vazirligi"
+        ),
+        "university": meta.get("university", "___"),
+        "department": meta.get("department", "___"),
+
+        "title": meta.get("title", "Mavzu ko‘rsatilmagan"),
+
+        "author": meta.get("author", "___"),
+        "course": meta.get("course", "___"),
+        "checker": meta.get("checker", "___"),
+        "city_year": meta.get("city_year", "___"),
+
+        "plan": [
+            "Kirish",
+            "Asosiy qism",
+            "Xulosa"
+        ],
+
+        "sections": [
+            {
+                "heading": "Kirish",
+                "content": (
+                    "Ushbu ishni avtomatik yaratish jarayonida texnik xatolik yuz berdi. "
+                    "Quyida standart akademik tuzilma asosida minimal mazmun keltirildi."
+                )
+            },
+            {
+                "heading": "Asosiy qism",
+                "content": (
+                    "AI xizmatida vaqtinchalik muammo yuzaga kelgani sababli "
+                    "asosiy qism avtomatik to‘liq shakllantirilmadi."
+                )
+            }
+        ],
+
+        "code_examples": [],
+
+        "conclusion": (
+            "Xulosa sifatida aytish mumkinki, ushbu ish texnik nosozlik sababli "
+            "to‘liq avtomatik shakllantirilmadi. Keyinchalik qayta urinish tavsiya etiladi.\n\n"
+            f"Texnik izoh: {error_message}"
+        )
+    }

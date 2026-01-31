@@ -32,6 +32,7 @@ INSTALLED_APPS += [
 
 INSTALLED_APPS += [
     'taqdimot_app.apps.TaqdimotAppConfig',
+    'payments'
 ]
 
 MIDDLEWARE = [
