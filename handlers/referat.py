@@ -6,8 +6,16 @@ from openai import OpenAI
 import os
 import requests
 from django.conf import settings
+from taqdimot_app.models import User
+from payments.models import Payment, WorkUsage
+from django.db.models import Sum
+from decimal import Decimal
+from taqdimot_app.services import balance_service
+import time
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+REQUIRED_AMOUNT = Decimal("4000")
 
 @private_only
 def start_referat(bot, msg):
@@ -25,10 +33,15 @@ def referat_topic(bot, msg):
     user_data[chat_id]["topic"] = msg.text
     user_state[chat_id] = "referat_institute"
 
+    institut = ("Institut va kafedrangizni(majburiy emas) to'liq kiriting.\n\n"
+            "Misol: <b>O‘ZBEKISTON RESPUBLIKASI OLIY TA’LIM FAN VA INNOVATSIYA VAZIRLIGI"
+                        "SARBON UNIVERSITETI"
+                        "AXBOROT XAVFSIZLIGI KAFEDRASI.</b>")
+
     bot.send_message(
         chat_id,
-        "🏫 Institut va kafedrani kiriting (majburiy emas).\n"
-        "Agar yo‘q bo‘lsa, `-` deb yozing."
+        institut,
+        parse_mode="HTML"
     )
 
 @private_only
@@ -38,9 +51,13 @@ def referat_institute(bot, msg):
     user_data[chat_id]["institute"] = msg.text
     user_state[chat_id] = "referat_author"
 
+    mualif = ("Muallif ism-familiyasi, guruhi va kursini to'liq kiriting.\n\n"
+            "📋Namuna: <b>Isroilov Ismoiljon Muhiddin o'g'li, 4-kurs, 21.36-guruh.</b>")
+
     bot.send_message(
         chat_id,
-        "👤 Muallif ma’lumotlari (ISM, FAMILIYA, GURUH, KURS) ni to‘liq kiriting."
+        mualif,
+        parse_mode="HTML"
     )
 
 @private_only
@@ -81,21 +98,19 @@ def referat_languange(bot, call):
 
     data = user_data[chat_id]
 
-    text = f"""🌟 Ajoyib, quyidagi ma’lumotlarni tekshiring.
-        {data["type"].upper()}
-        Mavzu: {data["topic"]}
-        Institut va kafedra: {data['institute']}
-        Muallif: {data['author']}
+    text = (f"🌟 Ajoyib, quyidagi ma’lumotlarni tekshiring.\n\n"
+        f"<b>{data["type"].upper()}</b>\n"
+        f"<b>Mavzu: {data["topic"]}</b>\n"
+        f"<b>Institut va kafedra:</b> {data['institute']}\n"
+        f"<b>Muallif:</b> {data['author']}\n"
+        f"<b>Sahifalar soni:</b> {data["bet"]}\n"
+        f"<b>Tili:</b> {data["til"]}\n"
+        f"<b>Hajmi:</b> {data['bet']} bet\n\n"
+        f"<b>✅ Tayyorlash</b>\n"
+        f"<b>✏️ O‘zgartirish</b>\n"
+        "<b>🚫 Rad etish</b>")
 
-        Sahifalar soni: {data["bet"]}
-        Tili: {data["til"]}
-
-        ✅ Tayyorlash
-        ✏️ O‘zgartirish
-        🚫 Rad etish
-    """
-
-    bot.send_message(chat_id, text, reply_markup=check_button())
+    bot.send_message(chat_id, text, reply_markup=check_button(), parse_mode="HTML")
 
 @private_only
 def choose_button(bot, call):
@@ -103,31 +118,65 @@ def choose_button(bot, call):
     data = user_data[chat_id]
 
     if call.data == "do":
-        response = requests.post(
-            "http://127.0.0.1:8000/api/generate-work/",
-            json=user_data[chat_id]
+
+        # 1️⃣ User
+        user, _ = User.objects.get_or_create(
+            chat_id=chat_id,
+            defaults={
+                "first_name": call.message.chat.first_name or "",
+                "last_name": call.message.chat.last_name,
+                "username": call.message.chat.username,
+            }
         )
 
-        # API JSON javobidan fayl URL ni oling
-        file_url = response.json().get("file")
+        # 2️⃣ Balansni tekshiramiz
+        balance = balance_service.get_user_balance(user)
+
+        if balance < REQUIRED_AMOUNT:
+            bot.send_message(
+                chat_id,
+                f"❌ Hisobingizda mablag‘ yetarli emas.\n\n"
+                f"💰 Balansingiz: {int(balance)} so‘m\n"
+                f"📌 Kerakli summa: {int(REQUIRED_AMOUNT)} so‘m"
+            )
+            return
+
+        # 3️⃣ Generate
+        response = requests.post(
+            "http://127.0.0.1:8000/api/generate-work/",
+            json=data
+        )
+
+        if response.status_code != 200:
+            bot.send_message(chat_id, "Serverda xatolik yuz berdi ❌")
+            return
+
+        resp_data = response.json()
+        file_url = resp_data.get("file")
+
         if not file_url:
             bot.send_message(chat_id, "Fayl yaratilmay qoldi ❌")
             return
 
-        # URL dan faqat fayl nomini ajratib olish
-        filename = os.path.basename(file_url)  # misol: referat_xxxxx.docx
+        # 4️⃣ MUHIM QISM — balansdan AYIRISH 🔥
+        WorkUsage.objects.create(
+            user=user,
+            work_type=data.get("type", "referat"),
+            amount=REQUIRED_AMOUNT
+        )
+
+        filename = os.path.basename(file_url)
         file_path = os.path.join(settings.MEDIA_ROOT, filename)
 
-        # Telegramga faylni yuborish
         with open(file_path, "rb") as f:
-            bot.send_document(chat_id, f, caption="Sizning referatingiz tayyor ✅")
+            bot.send_document(
+                chat_id,
+                f,
+                caption="✅ Ish tayyor. Balansingizdan 4000 so‘m yechildi"
+            )
+            
+            time.sleep(0.5)
+            bot.send_message(chat_id, "Bosh menu", reply_markup=general_menu())
 
-
-    if call.data == "back":
-        bot.send_message(chat_id, "Siz bosh menu dasiz", reply_markup=general_menu())
-        return
-
-    if call.data == "check":
-        bot.send_message(chat_id, "Mavzuni to'liq, bexato va tushunarli qilib kiriting.")
-        user_state[chat_id] = 'referat_topic'
-        user_data[chat_id] = {}
+    elif call.data == "back":
+        bot.send_message(chat_id, "Siz bosh menuga qaytingiz", reply_markup=general_menu())
