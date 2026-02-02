@@ -22,3 +22,39 @@ def choose_languange():
     rus = types.InlineKeyboardButton(text="RU", callback_data="ru")
     keyboards.row(uzbek, engilish, rus)
     return keyboards
+
+def payme_button():
+    keyboards = types.InlineKeyboardMarkup()
+    payme = types.InlineKeyboardButton(text="💳 Payme orqali to‘lash", callback_data="pay_4000")
+    keyboards.row(payme)
+    return keyboards
+
+def pay_type():
+    keyboards = types.InlineKeyboardMarkup()
+    click = types.InlineKeyboardButton(text="💳 Plastik dan click qilish", callback_data="click")
+    payme_bot = types.InlineKeyboardButton(text="💳 Bot orqali to'lov qilish", callback_data="bot_pay")
+    keyboards.row(click)
+    keyboards.row(payme_bot)
+    return keyboards
+
+def send_check_button():
+    keyboards = types.InlineKeyboardMarkup()
+    send_check = types.InlineKeyboardButton(text="Check ni jo'natish", callback_data="send_check")
+    back = types.InlineKeyboardButton(text="Orqaga", callback_data="check_back")
+    keyboards.row(send_check)
+    keyboards.row(back)
+    return keyboards
+
+def payme_cash():
+    keyboards = types.InlineKeyboardMarkup()
+    # Har bir tugma uchun alohida callback_data
+    boshlangich = types.InlineKeyboardButton(text="5 000", callback_data="pay_5000")
+    orta = types.InlineKeyboardButton(text="10 000", callback_data="pay_10000")
+    eng_orta = types.InlineKeyboardButton(text="20 000", callback_data="pay_20000")
+    yuqori = types.InlineKeyboardButton(text="50 000", callback_data="pay_50000")
+    boshqa = types.InlineKeyboardButton(text="Boshqa summa", callback_data="pay_boshqa")
+    
+    keyboards.row(boshlangich, orta)
+    keyboards.row(eng_orta, yuqori)
+    keyboards.row(boshqa)
+    return keyboards

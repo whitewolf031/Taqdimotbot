@@ -2,52 +2,33 @@ from django.db import models
 from taqdimot_app.models import User
 
 class Payment(models.Model):
-    PAYMENT_METHOD_CHOICES = [
-        ('payme', 'Payme'),
-        ('manual', 'Manual'),
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
     ]
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='payments'
-    )
-    amount = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        help_text="Payment amount"
-    )
-    method = models.CharField(
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    method = models.CharField(max_length=10)
+    status = models.CharField(
         max_length=10,
-        choices=PAYMENT_METHOD_CHOICES,
-        help_text="Payment method"
+        choices=STATUS_CHOICES,
+        default="pending"
     )
-    status = models.BooleanField(
-        default=False,
-        help_text="Payment confirmed"
-    )
-    receipt_image = models.ImageField(
-        upload_to='payments/receipts/',
+
+    receipt_file_id = models.CharField(
+        max_length=255,
         null=True,
-        blank=True,
-        help_text="Receipt image for manual payment"
+        blank=True
     )
-    verified_by_ai = models.BooleanField(
-        default=False,
-        help_text="Whether the receipt was verified by AI"
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
-    confirmed_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Date when payment was confirmed"
-    )
+
+    verified_by_ai = models.BooleanField(default=False)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "payments"
-        ordering = ["-created_at"]
+        ordering = ["-confirmed_at"]
 
     def __str__(self):
         return f"Payment {self.id} - {self.user.chat_id} - {self.amount}"

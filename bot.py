@@ -7,8 +7,15 @@ from botconfig import BotConfig
 from state.state_meneger import register_state_manager
 from state.storage import user_state
 from keyboards.botreplykeyboards import general_menu
+from keyboards.botinlinekeyboards import payme_cash, pay_type
 from handlers.slide import slide_handler
-from  handlers.qolanma import send_qollanma
+from handlers.qolanma import send_qollanma
+from handlers.admin_check import admin_check_handler
+from handlers.payment import (
+    send_payme_invoice_by_chat,
+    pre_checkout_handler,
+    successful_payment_handler
+)
 
 def start_bot():
 
@@ -27,7 +34,6 @@ def start_bot():
     @bot.message_handler(commands=['referat'])
     def referat(msg):
         start_referat(bot, msg)
-
 
     # Oddiy menu handlerlar
     @bot.message_handler(func=lambda m: m.text == "Bog'lanish")
@@ -53,6 +59,66 @@ def start_bot():
     @bot.callback_query_handler(func=lambda call: call.data in ["do","back", "check"])
     def referat_do(call):
         choose_button(bot, call)
+
+    # PAYME CALLBACK
+    @bot.message_handler(commands=['buy'])
+    def buy_command(msg):
+        chat_id = msg.chat.id
+        bot.send_message(
+            chat_id,
+            "To'lov turini tanlang",
+            reply_markup=pay_type()
+        )
+
+    @bot.callback_query_handler(func=lambda call: call.data in ["click","bot_pay"])
+    def payment_type_handler(call):
+        chat_id = call.message.chat.id
+
+        if call.data == "click":
+            admin_check_handler(bot, call)
+
+        if call.data == "bot_pay":
+            bot.send_message(
+            chat_id,
+            "💰 Iltimos, to‘lamoqchi bo‘lgan summani tanlang yoki boshqa summani kiriting:",
+            reply_markup=payme_cash()
+        )
+
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("pay_"))
+    def pay_callback(call):
+        chat_id = call.message.chat.id
+        data = call.data
+
+        if data == "pay_boshqa":
+            bot.send_message(chat_id, "💰 Iltimos, to‘lamoqchi bo‘lgan summani kiriting:")
+            bot.register_next_step_handler(call.message, ask_amount)
+        
+        else:
+            # callback_data dan summani ajratamiz
+            amount = int(data.split("_")[1])
+            send_payme_invoice_by_chat(bot, chat_id, amount)
+
+    def ask_amount(msg):
+        chat_id = msg.chat.id
+        try:
+            amount = int(msg.text.replace(" ", ""))
+            if amount < 100:
+                bot.send_message(chat_id, "❌ Summa juda kichik, iltimos kattaroq summa kiriting")
+                return
+        except ValueError:
+            bot.send_message(chat_id, "❌ Iltimos, faqat raqam kiriting")
+            return
+
+        # Invoice jo'natamiz
+        send_payme_invoice_by_chat(bot, chat_id, amount)
+
+    @bot.pre_checkout_query_handler(func=lambda query: True)
+    def pre_checkout(query):
+        pre_checkout_handler(bot, query)
+
+    @bot.message_handler(content_types=['successful_payment'])
+    def success_payment(msg):
+        successful_payment_handler(bot, msg)
 
     @bot.message_handler(func=lambda m: m.text in ("Orqaga", "Orqaga ⬅️"))
     def go_back(msg):
