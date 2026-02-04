@@ -39,3 +39,9 @@ def register_state_manager(bot):
 
         elif state == "referat_bet":
             referat_bet(bot, msg)
+
+        # elif state == "referat_bet":
+        #     referat_bet(bot, msg)
+
+        # elif state == "referat_bet":
+        #     referat_bet(bot, msg)
