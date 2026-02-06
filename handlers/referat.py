@@ -12,6 +12,7 @@ from django.db.models import Sum
 from decimal import Decimal
 from taqdimot_app.services import balance_service
 import time
+from django.db import transaction
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
@@ -115,68 +116,111 @@ def referat_languange(bot, call):
 @private_only
 def choose_button(bot, call):
     chat_id = call.message.chat.id
+
+    # ❗ Sessiya yo‘q bo‘lsa crash bo‘lmasin
+    if chat_id not in user_data:
+        bot.send_message(chat_id, "Sessiya tugagan. Qaytadan boshlang.")
+        bot.send_message(chat_id, "Bosh menu", reply_markup=general_menu())
+        return
+
     data = user_data[chat_id]
 
-    if call.data == "do":
+    # 🔙 BACK tugmasi
+    if call.data == "back":
+        user_data.pop(chat_id, None)
+        user_state.pop(chat_id, None)
+        bot.send_message(chat_id, "Bosh menu", reply_markup=general_menu())
+        return
 
-        # 1️⃣ User
-        user, _ = User.objects.get_or_create(
-            chat_id=chat_id,
-            defaults={
-                "first_name": call.message.chat.first_name or "",
-                "last_name": call.message.chat.last_name,
-                "username": call.message.chat.username,
-            }
+    # 🚀 GENERATE
+    if call.data != "do":
+        return
+
+    # 1️⃣ USER olish yoki yaratish
+    user, _ = User.objects.get_or_create(
+        chat_id=chat_id,
+        defaults={
+            "first_name": call.message.chat.first_name or "",
+            "last_name": call.message.chat.last_name,
+            "username": call.message.chat.username,
+        }
+    )
+
+    # 2️⃣ REAL BALANS HISOBLASH (approved Payment summalari orqali)
+    payments_sum = Payment.objects.filter(
+        user=user,
+        status="approved"
+    ).aggregate(total=Sum("amount"))["total"] or 0
+
+    used_sum = WorkUsage.objects.filter(user=user).aggregate(total=Sum("amount"))["total"] or 0
+
+    balance = Decimal(payments_sum) - Decimal(used_sum)
+
+    if balance < REQUIRED_AMOUNT:
+        bot.send_message(
+            chat_id,
+            f"❌ Mablag‘ yetarli emas\n\n"
+            f"💰 Balans: {balance:,.0f} so‘m\n"
+            f"📌 Kerakli: {REQUIRED_AMOUNT:,.0f} so‘m"
         )
+        return
 
-        # 2️⃣ Balansni tekshiramiz
-        balance = balance_service.get_user_balance(user)
+    # WorkUsage choices ga moslab olamiz
+    work_type = data.get("type", "referat").lower()
+    if work_type not in ["referat", "mustaqil"]:
+        work_type = "referat"
 
-        if balance < REQUIRED_AMOUNT:
-            bot.send_message(
-                chat_id,
-                f"❌ Hisobingizda mablag‘ yetarli emas.\n\n"
-                f"💰 Balansingiz: {int(balance)} so‘m\n"
-                f"📌 Kerakli summa: {int(REQUIRED_AMOUNT)} so‘m"
+    try:
+        # ❗ TRANSACTION ICHIDA barcha kritik ishlar
+        with transaction.atomic():
+            # 3️⃣ ISH GENERATSIYA API
+            response = requests.post(
+                "http://127.0.0.1:8000/api/generate-work/",
+                json=data,
+                timeout=180
             )
-            return
 
-        # 3️⃣ Generate
-        response = requests.post(
-            "http://127.0.0.1:8000/api/generate-work/",
-            json=data
-        )
+            if response.status_code != 200:
+                raise Exception("API error")
 
-        if response.status_code != 200:
-            bot.send_message(chat_id, "Serverda xatolik yuz berdi ❌")
-            return
+            resp_data = response.json()
+            file_url = resp_data.get("file")
 
-        resp_data = response.json()
-        file_url = resp_data.get("file")
+            if not file_url:
+                raise Exception("File not generated")
 
-        if not file_url:
-            bot.send_message(chat_id, "Fayl yaratilmay qoldi ❌")
-            return
+            # 4️⃣ BALANSDAN YECHISH
+            WorkUsage.objects.create(
+                user=user,
+                work_type=work_type,
+                amount=REQUIRED_AMOUNT
+            )
 
-        # 4️⃣ MUHIM QISM — balansdan AYIRISH 🔥
-        WorkUsage.objects.create(
-            user=user,
-            work_type=data.get("type", "referat"),
-            amount=REQUIRED_AMOUNT
-        )
+    except Exception as e:
+        print("OPENAI ERROR:", e)
+        bot.send_message(chat_id, f"❌ Serverda xatolik yuz berdi: {e}")
+        return
 
-        filename = os.path.basename(file_url)
-        file_path = os.path.join(settings.MEDIA_ROOT, filename)
+    # ✅ FAYL YUBORISH
+    filename = os.path.basename(file_url)
+    file_path = os.path.join(settings.MEDIA_ROOT, filename)
 
+    try:
         with open(file_path, "rb") as f:
             bot.send_document(
                 chat_id,
                 f,
-                caption="✅ Ish tayyor. Balansingizdan 4000 so‘m yechildi"
+                caption=(
+                    "✅ Ish tayyor!\n"
+                    f"💸 Balansingizdan {REQUIRED_AMOUNT:,.0f} so‘m yechildi"
+                )
             )
-            
-            time.sleep(0.5)
-            bot.send_message(chat_id, "Bosh menu", reply_markup=general_menu())
+    except Exception as e:
+        bot.send_message(chat_id, f"Faylni yuborishda xatolik: {e}")
 
-    elif call.data == "back":
-        bot.send_message(chat_id, "Siz bosh menuga qaytingiz", reply_markup=general_menu())
+    # 5️⃣ STATE TOZALASH
+    user_data.pop(chat_id, None)
+    user_state.pop(chat_id, None)
+
+    time.sleep(0.3)
+    bot.send_message(chat_id, "Bosh menu", reply_markup=general_menu())
