@@ -26,12 +26,12 @@ def general_back():
 
 def betlar_soni():
     keyboards = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    bet1 = types.KeyboardButton("5-10")
-    bet2 = types.KeyboardButton("10-15")
-    bet3 = types.KeyboardButton("15-20")
-    bet4 = types.KeyboardButton("20-25")
-    bet5 = types.KeyboardButton("25-30")
-    bet6 = types.KeyboardButton("30-35")
+    bet1 = types.KeyboardButton("5")
+    bet2 = types.KeyboardButton("10")
+    bet3 = types.KeyboardButton("15")
+    bet4 = types.KeyboardButton("20")
+    bet5 = types.KeyboardButton("25")
+    bet6 = types.KeyboardButton("30")
 
     keyboards.row(bet1, bet2)
     keyboards.row(bet3, bet4)
