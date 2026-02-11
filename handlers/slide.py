@@ -1,7 +1,24 @@
 from state.storage import user_slide, user_state
-from utils import private_only
 from keyboards.botinlinekeyboards import slide_button, slide_lang
+from utils import private_only
+from keyboards.botreplykeyboards import general_menu
+from openai import OpenAI
+import os
+import requests
+from django.conf import settings
+from taqdimot_app.models import User
+from payments.models import Payment, WorkUsage
+from django.db.models import Sum
+from decimal import Decimal
+from taqdimot_app.services import balance_service
+import time
+from django.db import transaction
 
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+REQUIRED_AMOUNT = Decimal("4000")
+
+@private_only
 def send_slide(bot, msg):
     chat_id = msg.chat.id
 
@@ -12,6 +29,7 @@ def send_slide(bot, msg):
 
     bot.send_message(chat_id, slide_text, parse_mode="HTML")
 
+@private_only
 def author_name(bot, msg):
     chat_id = msg.chat.id
     user_slide[chat_id]["topic"] = msg.text
@@ -24,6 +42,7 @@ def author_name(bot, msg):
 
     bot.send_message(chat_id, slide_insitut_text, parse_mode="HTML")
 
+@private_only
 def slide_insitut(bot, msg):
     chat_id = msg.chat.id
 
@@ -39,6 +58,7 @@ def slide_insitut(bot, msg):
         parse_mode="HTML"
     )
 
+@private_only
 def slide_author(bot, msg):
     chat_id = msg.chat.id
     user_slide[chat_id]["author"] = msg.text
@@ -46,6 +66,7 @@ def slide_author(bot, msg):
 
     bot.send_message(chat_id, "Slide lar betini kiriting")
 
+@private_only
 def slide_bet(bot, msg):
     chat_id = msg.chat.id
 
@@ -84,7 +105,7 @@ def slide_confirm(bot, call):
     data = user_slide[chat_id]
 
     text = (f"🌟 Ajoyib, quyidagi ma’lumotlarni tekshiring.\n\n"
-        f"<b>{data["type"].upper()}</b>\n"
+        f"<b>Slide</b>\n"
         f"<b>Mavzu: {data["topic"]}</b>\n"
         f"<b>Institut va kafedra:</b> {data['institute']}\n"
         f"<b>Muallif:</b> {data['author']}\n"
@@ -101,22 +122,22 @@ def slide_send_button(bot, call):
     chat_id = call.message.chat.id
 
     # ❗ Sessiya yo‘q bo‘lsa crash bo‘lmasin
-    if chat_id not in user_data:
+    if chat_id not in user_slide:
         bot.send_message(chat_id, "Sessiya tugagan. Qaytadan boshlang.")
         bot.send_message(chat_id, "Bosh menu", reply_markup=general_menu())
         return
 
-    data = user_data[chat_id]
+    data = user_slide[chat_id]
 
     # 🔙 BACK tugmasi
-    if call.data == "back":
-        user_data.pop(chat_id, None)
+    if call.data == "slide_back":
+        user_slide.pop(chat_id, None)
         user_state.pop(chat_id, None)
         bot.send_message(chat_id, "Bosh menu", reply_markup=general_menu())
         return
 
     # 🚀 GENERATE
-    if call.data != "do":
+    if call.data != "slide_do":
         return
 
     # 1️⃣ USER olish yoki yaratish
@@ -158,7 +179,7 @@ def slide_send_button(bot, call):
         with transaction.atomic():
             # 3️⃣ ISH GENERATSIYA API
             response = requests.post(
-                "http://127.0.0.1:8000/api/generate-work/",
+                "http://127.0.0.1:8000/api/generate-slide/",
                 json=data,
                 timeout=180
             )
@@ -202,7 +223,7 @@ def slide_send_button(bot, call):
         bot.send_message(chat_id, f"Faylni yuborishda xatolik: {e}")
 
     # 5️⃣ STATE TOZALASH
-    user_data.pop(chat_id, None)
+    user_slide.pop(chat_id, None)
     user_state.pop(chat_id, None)
 
     time.sleep(0.3)

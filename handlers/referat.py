@@ -126,14 +126,14 @@ def choose_button(bot, call):
     data = user_data[chat_id]
 
     # 🔙 BACK tugmasi
-    if call.data == "back":
+    if call.data == "referat_back":
         user_data.pop(chat_id, None)
         user_state.pop(chat_id, None)
         bot.send_message(chat_id, "Bosh menu", reply_markup=general_menu())
         return
 
     # 🚀 GENERATE
-    if call.data != "do":
+    if call.data != "referat_do":
         return
 
     # 1️⃣ USER olish yoki yaratish
