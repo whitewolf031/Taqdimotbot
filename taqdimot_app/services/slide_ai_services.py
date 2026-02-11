@@ -4,75 +4,68 @@ import json
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
+def generate_slide_json(topic, author, institute, language, slide_count):
+    response = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a professional presentation creator."
+            },
+            {
+                "role": "user",
+                "content": f"""
+Mavzu: {topic}
+Muallif: {author}
+Institut: {institute}
+Til: {language}
+Slide soni: {slide_count}
 
-def generate_slide_json(system_role: str, prompt: str, meta: dict) -> dict:
-    """
-    AI dan POWERPOINT SLIDE uchun JSON olish
-    """
-
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4.1-mini",
-            messages=[
-                {"role": "system", "content": system_role},
-                {
-                    "role": "user",
-                    "content": prompt + f"""
-
-Natijani FAQAT to‘g‘ri JSON formatida qaytar.
-
-Quyidagi struktura qat’iy saqlansin:
+Quyidagi formatda JSON qaytar:
 
 {{
   "title_slide": {{
-    "title": "{meta['title']}",
-    "subtitle": "{meta['author']}"
+     "title": "...",
+     "subtitle": "..."
   }},
 
   "slides": [
     {{
-      "title": "Kirish",
-      "bullets": [
-        "punkt 1",
-        "punkt 2",
-        "punkt 3"
-      ]
+      "type": "section",
+      "title": "..."
     }},
     {{
-      "title": "Asosiy tushunchalar",
-      "bullets": [
-        "punkt 1",
-        "punkt 2",
-        "punkt 3"
-      ]
+      "type": "bullet",
+      "title": "...",
+      "points": ["...", "...", "..."]
     }},
     {{
-      "title": "Xulosa",
-      "bullets": [
-        "punkt 1",
-        "punkt 2",
-        "punkt 3"
-      ]
+      "type": "image",
+      "title": "...",
+      "points": ["...", "..."]
+    }},
+    {{
+      "type": "two_column",
+      "title": "...",
+      "left": ["...", "..."],
+      "right": ["...", "..."]
     }}
-  ]
+  ],
+
+  "conclusion": {{
+     "title": "Rahmat!"
+  }}
 }}
 
-⚠️ Hech qanday izoh yozma
-⚠️ Markdown yozma
-⚠️ Faqat JSON qaytar
+Qoidalar:
+- Slides soni aniq {slide_count} bo‘lsin
+- Faqat JSON qaytar
 """
-                }
-            ]
-        )
+            }
+        ]
+    )
 
-        raw_content = response.choices[0].message.content.strip()
-        return json.loads(raw_content)
-
-    except json.JSONDecodeError:
-        return _default_slide_json(meta, "AI noto‘g‘ri JSON qaytardi")
-
-    except Exception as e:
-        return _default_slide_json(meta, str(e))
+    return json.loads(response.choices[0].message.content)
 
 def _default_slide_json(meta: dict, error_message: str) -> dict:
     """

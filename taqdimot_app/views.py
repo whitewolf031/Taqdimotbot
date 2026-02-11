@@ -9,8 +9,16 @@ class GenerateSlideAPIView(APIView):
 
         topic = data.get("topic")
         author = data.get("author")
-        bet = data.get("bet")
-        til = data.get("til")
+        bet = data.get("bet")  # slide soni
+        til = data.get("til")  # til
+
+        if not all([topic, author, bet, til]):
+            return Response({"error": "topic, author, bet va til kerak"}, status=400)
+
+        try:
+            slide_count = int(bet)
+        except ValueError:
+            return Response({"error": "bet raqam bo‘lishi kerak"}, status=400)
 
         system_role = """
 Sen professional taqdimot (PowerPoint) yozuvchi AI san.
@@ -18,7 +26,7 @@ Har bir slide qisqa, tushunarli va bullet-point formatda bo‘lsin.
 """
 
         prompt = f"""
-Quyidagi mavzu uchun {bet} ta slide matni yoz:
+Quyidagi mavzu uchun {slide_count} ta slide matni yoz:
 
 Mavzu: {topic}
 Til: {til}
@@ -34,8 +42,13 @@ Har bir slide:
             "author": author
         }
 
-        slide_json = generate_slide_json(system_role, prompt, meta)
+        # Til va slide sonini AI funktsiyasiga uzatamiz
+        slide_json = generate_slide_json(
+            system_role=system_role,
+            prompt=prompt,
+            meta=meta,
+            language=til,  # foydalanuvchi tanlagan til
+            slide_count=int(bet)  # foydalanuvchi kiritgan slide beti
+        )
 
-        # keyingi bosqich → pptx yaratish
-        # hozircha JSON qaytaramiz
         return Response(slide_json)

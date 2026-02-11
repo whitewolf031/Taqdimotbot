@@ -34,3 +34,8 @@ class User(models.Model):
 
     def __str__(self):
         return f"{self.chat_id}"
+
+class SlideTemplate(models.Model):
+    name = models.CharField(max_length=100)
+    file = models.FileField(upload_to="ppt_templates/")
+    preview = models.ImageField(upload_to="previews/")

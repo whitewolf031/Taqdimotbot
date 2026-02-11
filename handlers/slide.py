@@ -178,9 +178,17 @@ def slide_send_button(bot, call):
         # ❗ TRANSACTION ICHIDA barcha kritik ishlar
         with transaction.atomic():
             # 3️⃣ ISH GENERATSIYA API
+            payload = {
+                "topic": data["topic"],
+                "institute": data["institute"],
+                "author": data["author"],
+                "language": data["til"],  # 🔥 rename
+                "slide_count": data["bet"]  # 🔥 rename
+            }
+
             response = requests.post(
                 "http://127.0.0.1:8000/api/generate-slide/",
-                json=data,
+                json=payload,
                 timeout=180
             )
 

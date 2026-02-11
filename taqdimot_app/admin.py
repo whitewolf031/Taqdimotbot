@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import User
-# from .models.payment_model import Payment
+from .models import SlideTemplate
 
 admin.site.register(User)
+admin.site.register(SlideTemplate)
