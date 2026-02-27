@@ -84,7 +84,7 @@ def slide_confirm(bot, call):
     data = user_slide[chat_id]
 
     text = (f"🌟 Ajoyib, quyidagi ma’lumotlarni tekshiring.\n\n"
-        f"<b>{data["type"].upper()}</b>\n"
+        f"<b>Slide</b>\n"
         f"<b>Mavzu: {data["topic"]}</b>\n"
         f"<b>Institut va kafedra:</b> {data['institute']}\n"
         f"<b>Muallif:</b> {data['author']}\n"
