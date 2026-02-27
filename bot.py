@@ -25,8 +25,6 @@ def start_bot():
 
     start_handler(bot)
 
-    # slide_handler(bot)
-
     @bot.message_handler(func=lambda m: m.text == "Qo'llanma")
     def qollanma_handler(msg):
         send_qollanma(bot, msg)
@@ -36,7 +34,7 @@ def start_bot():
         start_referat(bot, msg)
 
     @bot.message_handler(commands=['slide'])
-    def slide_command(bot):
+    def slide_command(msg):
         send_slide(bot, msg)
 
     # Oddiy menu handlerlar
