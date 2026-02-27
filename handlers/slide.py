@@ -1,6 +1,20 @@
 from state.storage import user_slide, user_state
 from utils import private_only
 from keyboards.botinlinekeyboards import slide_button, slide_lang
+from keyboards.botreplykeyboards import general_menu
+from django.conf import settings
+from taqdimot_app.models import User
+from payments.models import Payment, WorkUsage
+from django.db.models import Sum
+from decimal import Decimal
+from taqdimot_app.services import balance_service
+import time
+from django.db import transaction
+from openai import OpenAI
+
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+REQUIRED_AMOUNT = Decimal("4000")
 
 def send_slide(bot, msg):
     chat_id = msg.chat.id
@@ -101,16 +115,16 @@ def slide_send_button(bot, call):
     chat_id = call.message.chat.id
 
     # ❗ Sessiya yo‘q bo‘lsa crash bo‘lmasin
-    if chat_id not in user_data:
+    if chat_id not in user_slide:
         bot.send_message(chat_id, "Sessiya tugagan. Qaytadan boshlang.")
         bot.send_message(chat_id, "Bosh menu", reply_markup=general_menu())
         return
 
-    data = user_data[chat_id]
+    data = user_slide[chat_id]
 
     # 🔙 BACK tugmasi
     if call.data == "back":
-        user_data.pop(chat_id, None)
+        user_slide.pop(chat_id, None)
         user_state.pop(chat_id, None)
         bot.send_message(chat_id, "Bosh menu", reply_markup=general_menu())
         return
