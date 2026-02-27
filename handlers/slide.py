@@ -9,6 +9,8 @@ from django.db.models import Sum
 from decimal import Decimal
 from taqdimot_app.services import balance_service
 import time
+import os
+import requests
 from django.db import transaction
 from openai import OpenAI
 
@@ -216,7 +218,7 @@ def slide_send_button(bot, call):
         bot.send_message(chat_id, f"Faylni yuborishda xatolik: {e}")
 
     # 5️⃣ STATE TOZALASH
-    user_data.pop(chat_id, None)
+    user_slide.pop(chat_id, None)
     user_state.pop(chat_id, None)
 
     time.sleep(0.3)
