@@ -18,7 +18,7 @@ services:
 
   web:
     build: .
-    container_name: django-web
+    container_name: taqdimot-django-web
     restart: always
     ports:
       - "8001:8001"
