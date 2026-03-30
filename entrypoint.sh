@@ -1,9 +1,6 @@
 #!/bin/sh
 set -e
 
-# Faqat web uchun migration va server
-# Bot uchun bu script ishlamaydi (command: python bot.py)
-
 echo "⏳ Running migrations..."
 python manage.py migrate --noinput
 

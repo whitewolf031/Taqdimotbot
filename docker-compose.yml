@@ -31,12 +31,13 @@ services:
         condition: service_healthy
     env_file:
       - .env
-
+    # ✅ /app/staticfiles/ → 200 qaytarmasligi mumkin, shuning uchun /admin/ ishlatildi
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001"]
-      interval: 10s
+      test: ["CMD", "curl", "-f", "http://localhost:8001/admin/"]
+      interval: 15s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   bot:
     build: .
@@ -44,15 +45,14 @@ services:
     restart: always
     volumes:
       - .:/app
+    # ✅ Faqat db ga bog'liq — web tayyor bo'lishini kutish shart emas
     depends_on:
       db:
-        condition: service_healthy
-      web:
         condition: service_healthy
     env_file:
       - .env
     entrypoint: ["/app/entrypoint-bot.sh"]
-  
+
   # ══════════════════════════════════════
   # Frontend va Nginx — keyinchalik yoqiladi
   # ══════════════════════════════════════
