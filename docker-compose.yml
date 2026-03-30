@@ -32,19 +32,27 @@ services:
     env_file:
       - .env
 
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   bot:
     build: .
-    container_name: taqdimot-bot
+    container_name: telegram-bot
     restart: always
-    command: python bot.py
     volumes:
       - .:/app
     depends_on:
       db:
         condition: service_healthy
+      web:
+        condition: service_healthy
     env_file:
       - .env
-
+    entrypoint: ["/app/entrypoint-bot.sh"]
+  
   # ══════════════════════════════════════
   # Frontend va Nginx — keyinchalik yoqiladi
   # ══════════════════════════════════════

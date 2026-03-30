@@ -15,6 +15,7 @@ RUN apt-get update -qq \
         libxslt1-dev \
         libjpeg-dev \
         zlib1g-dev \
+        curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -26,7 +27,9 @@ RUN pip install --upgrade pip \
 COPY . /app/
 
 RUN sed -i 's/\r$//' /app/entrypoint.sh \
-    && chmod +x /app/entrypoint.sh
+    && sed -i 's/\r$//' /app/entrypoint-bot.sh \
+    && chmod +x /app/entrypoint.sh \
+    && chmod +x /app/entrypoint-bot.sh
 
 EXPOSE 8001
 
