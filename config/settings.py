@@ -53,6 +53,8 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = ['*']
 CSRF_COOKIE_SECURE = False
 
+CSRF_TRUSTED_ORIGINS = ["https://taqdimot-bot.cybernex-team.uz"]
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 TEMPLATES = [
