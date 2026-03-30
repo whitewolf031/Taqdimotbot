@@ -110,3 +110,15 @@ OpenAI’dan faqat JSON format qabul qilinadi
 JSON asosida Word fayl avtomatik yaratiladi
 
 Texnik xatolik bo‘lsa — default akademik struktura ishlatiladi
+
+docker compose up -d --build
+docker compose down
+
+docker restart telegram-bot
+
+docker stop <container_name_or_id>
+docker start <container_name_or_id>
+
+docker compose restart bot
+
+docker-compose down -v

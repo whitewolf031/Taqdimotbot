@@ -99,16 +99,18 @@ def slide_confirm(bot, call):
 
     data = user_slide[chat_id]
 
-    text = (f"🌟 Ajoyib, quyidagi ma’lumotlarni tekshiring.\n\n"
+    text = (
+        f"🌟 Ajoyib, quyidagi ma’lumotlarni tekshiring.\n\n"
         f"<b>Slide</b>\n"
-        f"<b>Mavzu: {data["topic"]}</b>\n"
+        f"<b>Mavzu: {data['topic']}</b>\n"
         f"<b>Institut va kafedra:</b> {data['institute']}\n"
         f"<b>Muallif:</b> {data['author']}\n"
-        f"<b>Sahifalar soni:</b> {data["bet"]}\n"
-        f"<b>Tili:</b> {data["til"]}\n\n"
+        f"<b>Sahifalar soni:</b> {data['bet']}\n"
+        f"<b>Tili:</b> {data['til']}\n\n"
         f"<b>✅ Tayyorlash</b>\n"
         f"<b>✏️ O‘zgartirish</b>\n"
-        "<b>🚫 Rad etish</b>")
+        "<b>🚫 Rad etish</b>"
+    )
 
     bot.send_message(chat_id, text, reply_markup=slide_button(), parse_mode="HTML")
 

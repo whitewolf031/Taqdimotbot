@@ -99,18 +99,22 @@ def referat_languange(bot, call):
 
     data = user_data[chat_id]
 
-    text = (f"🌟 Ajoyib, quyidagi ma’lumotlarni tekshiring.\n\n"
-        f"<b>{data["type"].upper()}</b>\n"
-        f"<b>Mavzu: {data["topic"]}</b>\n"
-        f"<b>Institut va kafedra:</b> {data['institute']}\n"
-        f"<b>Muallif:</b> {data['author']}\n"
-        f"<b>Sahifalar soni:</b> {data["bet"]}\n"
-        f"<b>Tili:</b> {data["til"]}\n"
-        f"<b>Hajmi:</b> {data['bet']} bet\n\n"
-        f"<b>✅ Tayyorlash</b>\n"
-        f"<b>✏️ O‘zgartirish</b>\n"
-        "<b>🚫 Rad etish</b>")
+    text = text = f"""
+    🌟 Ajoyib, quyidagi ma’lumotlarni tekshiring.
 
+    <b>{data["type"].upper()}</b>
+    <b>Mavzu: {data["topic"]}</b>
+    <b>Institut va kafedra:</b> {data['institute']}
+    <b>Muallif:</b> {data['author']}
+    <b>Sahifalar soni:</b> {data["bet"]}
+    <b>Tili:</b> {data["til"]}
+    <b>Hajmi:</b> {data['bet']} bet
+
+    <b>✅ Tayyorlash</b>
+    <b>✏️ O‘zgartirish</b>
+    <b>🚫 Rad etish</b>
+    """
+    
     bot.send_message(chat_id, text, reply_markup=check_button(), parse_mode="HTML")
 
 @private_only

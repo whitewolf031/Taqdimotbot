@@ -31,7 +31,7 @@ INSTALLED_APPS += [
 ]
 
 INSTALLED_APPS += [
-    'taqdimot_app.apps.TaqdimotAppConfig',
+    'taqdimot_app',
     'payments'
 ]
 
@@ -52,6 +52,8 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = ['*']
 CSRF_COOKIE_SECURE = False
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 TEMPLATES = [
     {

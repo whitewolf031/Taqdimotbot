@@ -22,7 +22,7 @@ def show_balance(bot, msg):
     # 1️⃣ Faqat TASDIQLANGAN to‘lovlar yig‘indisi
     total_paid = (
         Payment.objects
-        .filter(user=user, status="approved")   # 🔥 TO‘G‘RILANDI
+        .filter(user=user, status="approved")
         .aggregate(total=Sum("amount"))["total"]
         or Decimal("0")
     )

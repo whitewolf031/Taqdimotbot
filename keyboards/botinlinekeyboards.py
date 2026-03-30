@@ -48,9 +48,7 @@ def payme_button():
 def pay_type():
     keyboards = types.InlineKeyboardMarkup()
     click = types.InlineKeyboardButton(text="💳 Plastik dan click qilish", callback_data="click")
-    payme_bot = types.InlineKeyboardButton(text="💳 Bot orqali to'lov qilish", callback_data="bot_pay")
     keyboards.row(click)
-    keyboards.row(payme_bot)
     return keyboards
 
 def send_check_button():
