@@ -4,6 +4,17 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")  # <-- o'zingizning settings.py joyi
 django.setup()
 
+# ────────────────────────────────────────────────────────────────────
+import socket
+
+original_getaddrinfo = socket.getaddrinfo
+
+def getaddrinfo_ipv4_only(host, port, family=0, type=0, proto=0, flags=0):
+    return original_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+
+socket.getaddrinfo = getaddrinfo_ipv4_only
+# ────────────────────────────────────────────────────────────────────
+
 from telebot import TeleBot
 from handlers.start import start_handler
 from handlers.contact import admin_contact, take_phone, user_message, commit_message
