@@ -12,9 +12,9 @@ import time
 import os
 import requests
 from django.db import transaction
-from openai import OpenAI
+import google.generativeai as genai
 
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+client = genai.configure(api_key=settings.GEMINI_API_KEY)
 
 REQUIRED_AMOUNT = Decimal("4000")
 

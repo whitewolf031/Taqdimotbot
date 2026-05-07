@@ -2,7 +2,7 @@ from state.storage import user_state, user_data
 from utils import private_only
 from keyboards.botinlinekeyboards import referat_button, check_button, choose_languange
 from keyboards.botreplykeyboards import betlar_soni, general_menu
-from openai import OpenAI
+import google.generativeai as genai
 import os
 import requests
 from django.conf import settings
@@ -14,7 +14,7 @@ from taqdimot_app.services import balance_service
 import time
 from django.db import transaction
 
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+client = genai.configure(api_key=settings.GEMINI_API_KEY)
 
 REQUIRED_AMOUNT = Decimal("4000")
 

@@ -1,10 +1,10 @@
 import json
-from openai import OpenAI
+import google.generativeai as genai
 from django.conf import settings
 from botconfig import BotConfig
 from payments.services.telegram_image_service import download_telegram_photo_as_base64
 
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+client = genai.configure(api_key=settings.GEMINI_API_KEY)
 
 def check_with_ai(file_id: str) -> dict:
     image_base64 = download_telegram_photo_as_base64(file_id)
